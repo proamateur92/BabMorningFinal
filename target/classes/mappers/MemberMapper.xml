@@ -1,0 +1,109 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper
+  PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+  "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+  <mapper namespace="Member">
+	<!-- 로그인처리 -->
+	<select id="login" parameterType="java.util.Map" resultType="java.util.Map">
+	select mb_number, mb_id, mb_pw, mb_name, mb_email, mb_ph, mb_signup, mb_ad1, mb_ad2, mb_ad3, mb_del
+	from members
+	where mb_id=#{mb_id} and mb_pw=#{mb_pw} and mb_del=0;
+	</select>
+	
+	<!-- 회원목록조회 -->  
+  	<select id = "memberList" resultType="kr.co.Member.MemberDTO">
+  		select *
+  		from members 
+  		where mb_id != 'admin' order by mb_number desc;		
+  	</select>
+  	
+  	<!-- 회원가입 -->
+  	<insert id = "insert" parameterType="kr.co.Member.MemberDTO">
+  		insert into 
+  		members(mb_id, mb_pw, mb_name, mb_email, mb_ph, mb_signup, mb_ad1, mb_ad2, mb_ad3, mb_del)
+  		values(#{mb_id}, #{mb_pw}, #{mb_name}, #{mb_email}, #{mb_ph}, curdate(), #{mb_ad1}, #{mb_ad2}, #{mb_ad3}, 0)
+  	</insert>
+  	
+	 <!-- 아이디 중복 검사 -->
+  	 <select id = "idChecking" parameterType="java.lang.String" resultType="java.lang.Integer">
+  	 	select count(*) 
+  	 	from members
+  		where mb_id = #{mb_id};
+  	 </select>
+  	 
+  	 <!-- 이메일 중복 검사 -->
+  	 <select id="emailChecking" parameterType="java.lang.String" resultType="java.lang.Integer">
+  	 	select count(*) 
+  	 	from members
+  	 	where mb_email=#{mb_email};
+  	 </select>
+  	 
+  	 <!-- 휴대전화 중복 검사 -->
+  	 <select id="phoneChecking" parameterType="java.lang.String" resultType="java.lang.Integer">
+  	 	select count(*) from members
+  	 	where mb_ph=#{mb_ph};
+  	 </select>
+  	 
+  	 <!-- 한명의 회원 정보 디테일 -->
+  	 <select id = "getMember" parameterType="java.lang.Integer" resultType="kr.co.Member.MemberDTO">
+  	 	select * 
+  	 	from members
+  	 	where mb_number = #{mb_number};
+  	 </select>
+  	 
+  	 <!-- 회원의 정보 수정 -->
+  	 <update id="update" parameterType="kr.co.Member.MemberDTO">
+  	 update members set 
+  		 mb_pw=#{mb_pw}, 
+  		 mb_ph=#{mb_ph}, 
+  		 mb_ad1=#{mb_ad1}, 
+  		 mb_ad2=#{mb_ad2}, 
+  		 mb_ad3=#{mb_ad3}
+  		 where mb_number=#{mb_number}; 
+  	 </update>
+  	 
+  	 <!-- 회원 탈퇴 -->
+  	 <update id="delete" parameterType="java.lang.Integer">
+  	 update members 
+  	 set mb_del = 1
+  	 where mb_number=#{mb_number} 
+  	 </update>
+  	 
+  	 <!-- 비밀번호 일치 여부 -->
+  	 <select id="pwChecking" parameterType="kr.co.Member.MemberDTO" resultType="java.lang.Integer">
+  	 	select count(*) 
+  	 	from members
+  	 	where mb_pw=#{mb_pw} and mb_number=#{mb_number};
+  	 </select>
+  	 
+  	 <update id="adminDelete" parameterType="kr.co.Member.MemberDTO">
+  	 	update members 
+  	 	set mb_del = #{mb_del}
+  	 	where mb_number=#{mb_number}
+  	 </update>
+  	 
+  	  <!-- 이메일로 아이디 찾기 -->
+      <select id="findIdByEmail" parameterType="kr.co.Member.MemberDTO" resultType="java.lang.String">
+         select mb_id 
+         from Members 
+         where mb_name=#{mb_name} and mb_email=#{mb_email}
+      </select>
+      
+      <!--  새 비밀번호 발급 -->
+      <update id="newPw" parameterType="kr.co.Member.MemberDTO">
+         update Members
+         set mb_pw = #{mb_pw} 
+         where mb_id=#{mb_id} and mb_email=#{mb_email}
+      </update>
+      
+      <!-- 멤버 회원수 구하기 -->
+      <select id="getMemberCount" resultType="java.lang.Integer">
+         select count(*) from members;
+      </select>
+      
+      <!-- 오늘 가입한 멤버 회원수 구하기 -->
+      <select id="getSignUpCount" parameterType="java.lang.String" resultType="java.lang.Integer">
+         select count(*) from members
+         where mb_signup = #{today};
+      </select>
+  </mapper>

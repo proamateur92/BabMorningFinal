@@ -1,0 +1,98 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper
+  PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+  "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+ <mapper namespace="Order">
+    <insert id="OrderInsert" parameterType="kr.co.Order.OrderDTO">
+       insert into 
+       orders(
+             od_id, 
+             od_name, 
+             od_price, 
+             od_ph, 
+             od_ad1, 
+             od_ad2, 
+             od_ad3, 
+             od_date, 
+             od_state, 
+             od_memo, 
+             od_delivery,
+             mb_number
+             )
+          values(
+             #{od_id}, 
+             #{od_name}, 
+             #{od_price}, 
+             #{od_ph}, 
+             #{od_ad1}, 
+             #{od_ad2}, 
+             #{od_ad3}, 
+             now(), 
+             0, 
+             #{od_memo},
+             #{od_delivery},
+             #{mb_number}
+             )
+    </insert>
+    
+    <insert id="InsertSequence" parameterType="kr.co.Order.OrderSequenceDTO">
+       insert into 
+       order_seq(
+          od_id, 
+          od_amount, 
+          pd_number)
+       values(
+          #{od_id}, 
+          #{od_amount}, 
+          #{pd_number})
+    </insert>
+    
+    
+    <select id="GetMyOrder" parameterType="java.lang.String" resultType="kr.co.Order.OrderDTO">
+       select * from orders where mb_number = #{mb_number};
+    </select>
+    
+    <select id="GetOrderDetail" parameterType="java.lang.String" resultType="kr.co.Order.OrderDTO">
+       select * from orders where od_id = #{od_id};
+    </select>
+    
+    <select id="GetSeq" parameterType="java.lang.String" resultType="kr.co.Order.OrderSequenceDTO">
+       select * from order_seq where od_id = #{od_id};
+    </select>
+    
+    <select id="OrderList" resultType="kr.co.Order.OrderDTO">
+       select * from orders order by od_date desc;
+    </select>
+    
+    <update id="UpdateState" parameterType="kr.co.Order.OrderDTO">
+    	update orders set od_state=#{od_state} where od_id=#{od_id};
+    </update>
+    
+        <!-- 오늘 하루 매출 구해주는 매퍼 -->
+    <select id="GetOrderPrice" parameterType="java.lang.String" resultType="java.lang.Integer">
+       select ifnull(sum(od_price),0) from orders
+       where od_date = #{today};
+    </select>
+    
+    <!-- 오늘 하루 판매 건수 알려주는 매퍼 -->
+    <select id="GetOrderCount" parameterType="java.lang.String" resultType="java.lang.Integer">
+       select count(*) from orders
+       where od_date = #{today};
+    </select>
+    
+    <!-- od_id로 한번에 몇개 주문했는지 카운트해주기 -->
+    <select id="OrderSeqCount" parameterType="java.lang.String" resultType="java.lang.Integer">
+       select count(*) from order_seq
+       where od_id= #{od_id};
+    </select>
+    
+    <!-- 주문번호로 해당 Seq가져오기 -->
+    <select id="OrderSequenceDTO" parameterType="java.lang.String" resultType="kr.co.Order.OrderSequenceDTO">
+       select * from order_seq 
+       
+       where od_id=#{od_id}
+       
+       limit 1;
+    </select>
+    
+ </mapper>

@@ -1,0 +1,324 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper
+  PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+  "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+  <mapper namespace="Board">
+  	<!-- 공지사항 게시판 조회 -->
+  	<select id = "noticeList" parameterType="kr.co.Board.Criteria" resultType="kr.co.Board.BoardDTO">
+  		select *
+  		from board  
+  		where b_del = 0 
+  		and b_id = 'admin'
+  		
+  		<include refid="search"/>  	
+  		
+  		order by b_number desc	
+  		LIMIT #{pageStart}, #{perPageNum}	
+  	</select>
+  	
+  	<select id = "adminQna" resultType="kr.co.Board.BoardDTO">
+  		select *
+  		from board  
+  		where b_del = 0 
+  		and 
+  		b_id not in ('admin')
+  		<![CDATA[
+	  		and bcode_number > 1
+	  		and bcode_number < 6
+	  	]]>
+  		order by b_number desc;		  		
+  	</select>
+  	
+  	<!--게시판 조회 -->
+  	<select id = "boardList" parameterType="java.lang.Integer" resultType="kr.co.Board.BoardDTO">
+  		select *
+  		from board  
+  		where b_del = 0 
+  		<if test= "bcode_number == 2">
+	  		<![CDATA[
+	  		and bcode_number > 1
+	  		and bcode_number < 6
+	  		]]>
+  		</if>
+  		<if test= "bcode_number == 6">
+	  		<![CDATA[
+	  		and bcode_number = 6
+	  		]]>
+  		</if>
+  		order by b_number desc;	
+  	</select>
+  	
+  	<!-- 게시판 글 선택 조회 -->
+  	<select id = "getDetail" parameterType="java.lang.Integer" resultType="kr.co.Board.BoardDTO">
+  		select * 
+  		from board
+  		where b_number = #{b_number}
+  	</select>
+  	
+  	<!-- 게시판 글 쓰기 -->
+  	<insert id = "register" parameterType="kr.co.Board.BoardDTO">
+  		insert into 
+  		board(b_title, b_content, b_id, b_regdate, b_readcnt, b_etc, b_del, bcode_number, pd_number, pd_star)
+  		values(#{b_title}, #{b_content}, #{b_id}, now(), 0, #{b_etc}, 0, #{bcode_number}, #{pd_number}, #{pd_star})
+  	</insert>
+  	
+  	<!-- 게시판 글 수정 -->
+  	<update id = "update" parameterType="kr.co.Board.BoardDTO" >
+  		update board 
+  		set b_title = #{b_title},  b_content = #{b_content}
+  		where b_number = #{b_number}
+  	</update>
+  	
+  	<!-- 게시판 글 삭제 del=0 -->
+  	<update id = "delete" parameterType="java.lang.Integer" >
+  		update board 
+  		set b_del = 1
+  		where b_number = #{b_number}
+  	</update>
+  	
+  	<!-- 조회수 증가 -->
+  	<update id="readcnt" parameterType="java.lang.Integer">
+  		update board 
+  		set 
+  		b_readcnt = b_readcnt + 1
+  		where b_number = #{b_number}  
+  	</update>
+  	
+  	
+  	
+  	<!--////////////////////좋 아 요 기 능////////////////////////////////// -->
+  	
+  	<!-- 게시글 좋아요 활성화 -->
+  	<insert id = "insertlike" parameterType="java.util.Map">
+  		insert into like1(b_number, mb_id)
+  		value(#{b_number},#{mb_id})
+  	</insert>
+  	
+  	<!-- 좋아요  여부 확인-->
+  	<select id = "getlike" parameterType="kr.co.Board.LikeDTO" resultType="kr.co.Board.LikeDTO">
+  		select like_number from like1
+  		where b_number = #{b_number} and mb_id = #{mb_id}
+  	</select>
+  	
+  	<!-- 좋아요  취소-->
+  	<delete id = "deletelike" parameterType="java.util.Map">
+  		delete from like1
+  		where b_number = #{b_number} and mb_id = #{mb_id} 
+  	</delete>
+  	
+  	<!-- 좋아요  카운트-->
+  	<select id="likecnt" parameterType="java.lang.Integer" resultType="java.lang.Integer">
+  		select count(*) from like1
+  		where b_number = #{b_number}
+  	</select>
+  	
+  	<!-- ///////////////////////// 댓 글 ///////////////////////////// -->
+  	<!-- 댓글 조회 -->
+  	<select id = "getreply" parameterType="java.lang.Integer" resultType="kr.co.Board.BoardReplyDTO" >
+  		select * from board_reply
+  		where b_number = #{b_number}
+  	</select>
+  	
+  	<!-- 댓글 작성 -->
+  	<insert id="replyregister" parameterType="kr.co.Board.BoardReplyDTO">
+  		insert into board_reply(re_writer,re_content,re_date,b_number)
+  		values(#{re_writer},#{re_content},now(),#{b_number})
+  	</insert>
+  	
+  	<!-- 댓글 수정 -->
+  	<update id="replyupdate" parameterType="kr.co.Board.BoardReplyDTO">
+  		update board_reply
+  		set
+  		re_content = #{re_content}, re_date = now()
+  		where re_number = #{re_number}
+  	</update>
+  	
+  	<!-- 댓글 삭제 -->
+  	<delete id = "replydelete" parameterType="java.lang.Integer">
+  		delete from board_reply
+  		where re_number = #{re_number}
+  	</delete>
+  	
+  	<!-- 페이징 -->
+  	<!-- 게시판 페이징 -->
+  	<select id="listPaging" resultType="kr.co.Board.BoardDTO">
+  		<![CDATA[
+	  		select *
+	  		from board
+	  		where b_del = 0 
+	  		order by b_number desc 
+	  		limit #{page}, #{perPageNum} 		
+  		]]>
+  	</select>
+  	
+  	<!-- 게시판 게시글 조회 -->
+  	<select id="listCriteria" parameterType="kr.co.Board.Criteria" resultType="kr.co.Board.BoardDTO">
+  		<![CDATA[
+	  		select 	b_number,
+			        b_title,
+			        b_content,
+			        b_id,
+			        b_regdate,
+			        b_readcnt,
+			        bcode_number
+	  		from board 
+	  		where b_del = 0 
+	  		and bcode_number = #{bcode_number}
+	  	
+	  		order by b_number desc
+	  		limit #{pageStart}, #{perPageNum};
+  		]]>	
+  	</select>
+  	
+  	<!-- 검색 -->  	
+  	<select id="listSearch" parameterType="kr.co.Board.Criteria" resultType="kr.co.Board.BoardDTO">
+	    <![CDATA[
+	    SELECT b_number,
+	        b_title,
+	        b_content,
+	        b_id,
+	        b_regdate,
+	        b_readcnt,
+	        bcode_number
+	        
+	    FROM board 
+	    WHERE b_del =0 	    
+	    ]]>	     
+	     
+	    <if test = "bcode_number == 2">
+	    <![CDATA[
+	    	and
+	    	b_id not in ('admin')
+	    	and
+	    	bcode_number >= 2
+	    	and 
+	    	bcode_number < 6
+	    ]]>
+	    </if>
+	    
+	    <if test = "bcode_number == 1">
+	    <![CDATA[and bcode_number = #{bcode_number}]]>
+	    </if>
+	    
+	    <if test = "bcode_number == 6">
+	   		 <![CDATA[
+	   		 and
+	    		b_id not in ('admin')
+	   		 and 
+	   		 	bcode_number = #{bcode_number}]]>
+	    </if>	   
+	    
+	    <if test = "bcode_number == 7">
+	    <![CDATA[and b_id = #{mb_id}]]>
+	    </if>
+	    
+	    <if test = "bcode_number == 9">
+	    <![CDATA[and b_id = #{mb_id}]]>
+	    </if>
+	    
+	     <include refid="search"/>
+	     
+	    <![CDATA[	    
+	    ORDER BY b_number DESC
+	    LIMIT #{pageStart}, #{perPageNum}
+	    ]]>
+	</select>
+
+	<select id="countSearchedArticles" resultType="java.lang.Integer">
+	    <![CDATA[
+	    SELECT
+	        COUNT(b_number)
+	    FROM board
+	    WHERE b_number > 0 
+	    and b_del =0
+	    ]]>
+	    
+	    <if test = "bcode_number == 7">
+	   		 <![CDATA[
+	    		and b_id = #{mb_id}  
+	   		 ]]>	 
+	    </if>
+	    
+	    <if test = "bcode_number == 9">
+	   		 <![CDATA[
+	    		and b_id = #{mb_id}  
+	   		 ]]>	 
+	    </if>
+	    
+	    <if test = "7 > bcode_number ">
+	   		<![CDATA[
+	    		and bcode_number = #{bcode_number}  
+	   		]]>	   			 
+	    </if>
+	    <include refid="search"/>
+	</select>
+
+<sql id="search">
+    <if test="searchType != null"> 
+        <if test="searchType == 't'.toString()">	        
+            AND b_title LIKE CONCAT('%', #{keyword}, '%')
+        </if>
+        <if test="searchType == 'c'.toString()">
+            AND b_content LIKE CONCAT('%', #{keyword}, '%')
+        </if>
+        <if test="searchType == 'w'.toString()">
+            AND b_id LIKE CONCAT('%', #{keyword}, '%')
+        </if>
+        <if test="searchType == 'tc'.toString()">
+            AND (
+                b_title LIKE CONCAT('%', #{keyword}, '%')
+                OR b_content LIKE CONCAT('%', #{keyword}, '%')
+            )
+        </if>
+        <if test="searchType == 'cw'.toString()">
+            AND (
+                b_content LIKE CONCAT('%', #{keyword}, '%')
+                OR b_id LIKE CONCAT('%', #{keyword}, '%')
+            )
+        </if>
+        <if test="searchType == 'tcw'.toString()">
+            AND (
+                b_title LIKE CONCAT('%', #{keyword}, '%')
+                OR b_content LIKE CONCAT('%', #{keyword}, '%')
+                OR b_id LIKE CONCAT('%', #{keyword}, '%')
+            )
+        </if>
+    </if>    
+</sql>
+
+  <!-- pd_number에 대한 후기 게시판이 있는지 없는지 확인 -->
+  	<select id="countpdnum" parameterType="int" resultType="int">
+  		select count(*)
+  		from board
+  		where pd_number = #{pd_number} and bcode_number = 1;
+  	</select>
+  	
+  	<!--해당 상품에 대한 별점 총점 평균 반올림  -->
+  	<select id = "pdnumStar" resultType = "java.lang.Double"  parameterType = "kr.co.Board.BoardDTO">
+  		select pd_star
+		from board
+		where pd_number = #{pd_number} and bcode_number = #{bcode_number} and b_number = #{b_number};
+  	</select>
+  	
+  	<!-- productDetail.jsp의 탭에 구매후기를 띄우기 위한 메소드  -->
+  	<select id = "boardReviewList" parameterType = "java.lang.Integer" resultType = "kr.co.Board.BoardDTO">
+  		select *
+  		from board
+  		where pd_number = #{pd_number} and bcode_number = 1;
+  	
+  	</select>
+  	
+  	<!-- 마이페이지 내게시글 더보기 -->
+  	<select id = "myPageBoardList" parameterType="java.lang.String"	resultType="kr.co.Board.BoardDTO">
+  		select * 
+  		from board   
+  		where b_id = #{mb_id}
+  	</select>
+
+	     <!-- 날짜와 bcode_number로 게시판 갯수 출력하는 매퍼 -->
+     <select id = "boardCount" parameterType="java.util.Map" resultType="java.lang.String">
+        select count(*) from board
+      where b_regdate = #{today} and bcode_number= #{bcode};
+     </select>
+  	
+  </mapper>
